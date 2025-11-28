@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import mimetypes
+import io
+try:
+    import magic
+except Exception:
+    magic = None
 import uuid
 from pathlib import Path
 
@@ -21,9 +26,32 @@ class DocumentFetcher:
         ) as client:
             response = await client.get(url)
             response.raise_for_status()
-            target_path = self._temp_dir / self._build_filename(
-                url, response.headers.get("content-type")
-            )
+            content_type = response.headers.get("content-type")
+
+            # If content-type is generic or missing, try to detect from bytes
+            if not content_type or content_type in ("application/octet-stream", "binary/octet-stream"):
+                detected_type = None
+                # First try python-magic if installed
+                if magic:
+                    try:
+                        detected_type = magic.from_buffer(response.content, mime=True)
+                    except Exception:
+                        detected_type = None
+
+                # Fall back to simple checks on the first bytes
+                if not detected_type:
+                    head = response.content[:16]
+                    if head.startswith(b"%PDF"):
+                        detected_type = "application/pdf"
+                    elif head.startswith(b"\x89PNG"):
+                        detected_type = "image/png"
+                    elif head[0:2] in (b"\xff\xd8", b"\xff\xd9"):
+                        detected_type = "image/jpeg"
+
+                if detected_type:
+                    content_type = detected_type
+
+            target_path = self._temp_dir / self._build_filename(url, content_type)
             target_path.write_bytes(response.content)
         return target_path
 
