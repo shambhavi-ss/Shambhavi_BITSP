@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+.venv/
+ENV/
+env/
+.virtualenv/
+
+# Environment Variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+test_*.py
+*_test.py
+tests/
+
+# Sample files (don't include in Docker image)
+Sample*.pdf
+SAmple*.pdf
+training_samples/
+
+# Temporary files
+tmp/
+*.tmp
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Makefile and scripts
+Makefile
+check_models.py
+download_samples.py
+evaluate_batch.py
+test_local.py
+test_api.py
+
+# Documentation
+QUICKSTART.md
+SOLUTION.md
+TESTING.md
+TROUBLESHOOTING.md
+UPDATE_ENV.md
+REQUIREMENTS_CHECKLIST.md
