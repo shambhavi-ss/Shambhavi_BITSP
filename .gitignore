@@ -43,6 +43,8 @@ env/
 tmp/
 *.tmp
 *.log
+TRAINING_SAMPLES/
+TRAINING_SAMPLES.zip
 
 # Testing
 .pytest_cache/
@@ -51,3 +53,16 @@ htmlcov/
 
 # FastAPI
 *.db
+
+# Documentation (keep only essential)
+API_DEPLOYMENT_SUCCESS.md
+HINTS_COMPLIANCE.md
+JUDGES_HINTS_STATUS.md
+JUDGES_QUICK_CARD.txt
+QUICK_STATUS.md
+DEPLOY_FIX.md
+NGROK_SETUP.md
+REQUIREMENTS_CHECKLIST.md
+TESTING.md
+TROUBLESHOOTING.md
+UPDATE_ENV.md

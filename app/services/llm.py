@@ -17,7 +17,16 @@ class _LLMCallResult:
 
 
 class LLMExtractionService:
-    """Prompt Gemini models to convert OCR text into structured line-item data."""
+    """
+    Converts OCR text into structured line-item data using Google Gemini.
+    
+    This service handles the "understanding" phase - taking potentially noisy
+    OCR text and extracting the meaningful line items with proper structure.
+    We use careful prompt engineering to avoid common pitfalls like:
+    - Confusing dates/invoice numbers with amounts
+    - Double-counting items
+    - Missing legitimate line items
+    """
 
     def __init__(self, api_key: str, model: str = "gemini-1.5-pro") -> None:
         if not api_key:
@@ -56,7 +65,7 @@ class LLMExtractionService:
             "You are an expert billing analyst extracting line items from medical/pharmacy bills.\n\n"
             "TASK: Extract EVERY individual purchasable line item (services, medications, supplies, etc.) from the OCR text below.\n\n"
             "CRITICAL RULES:\n"
-            "1. Extract ONLY line items representing actual goods/services purchased WITH A VALID AMOUNT\n"
+            "1. Extract ONLY line items representing actual goods/services purchased WITH A VALID MONETARY AMOUNT\n"
             "2. DO NOT extract subtotals, grand totals, tax lines, summary rows, or headers\n"
             "3. DO NOT extract items without a clear monetary amount\n"
             "4. DO NOT double-count items that appear multiple times\n"
@@ -70,6 +79,21 @@ class LLMExtractionService:
             "    - 'Final Bill' for summary/payment pages\n"
             "    - 'Pharmacy' for medication/pharmacy bills\n"
             "    - 'Other' if unsure\n\n"
+            "⚠️ CRITICAL: AVOID INTERPRETATION ERRORS ⚠️\n"
+            "DO NOT confuse non-monetary fields with amounts! These are NOT amounts:\n"
+            "❌ Invoice Numbers (e.g., 'INV-12345', '2024001')\n"
+            "❌ Dates/Times (e.g., '01/01/2024', '14:30', '20240101')\n"
+            "❌ Patient IDs, Account Numbers, Reference Numbers\n"
+            "❌ Quantities without corresponding prices\n"
+            "❌ Page numbers, Order numbers\n"
+            "❌ Percentages (e.g., '10%' for discount or tax rates)\n"
+            "❌ Codes (e.g., 'CPT-99213', 'MED-001')\n\n"
+            "✅ ONLY extract values that represent CURRENCY/MONEY for goods or services:\n"
+            "- Line item prices/amounts (e.g., 'Consultation: 500')\n"
+            "- Service charges\n"
+            "- Medication costs\n"
+            "- Procedure fees\n\n"
+            "If a number appears near labels like 'Date', 'Time', 'Invoice #', 'Patient ID', 'Bill #', etc., it is NOT an amount!\n\n"
             "OUTPUT FORMAT (strict JSON):\n"
             "{\n"
             '  "page_no": <int>,\n'
@@ -77,13 +101,13 @@ class LLMExtractionService:
             '  "items": [\n'
             "    {\n"
             '      "item_name": "<exact name from bill>",\n'
-            '      "item_amount": <number (REQUIRED, never null)>,\n'
+            '      "item_amount": <number (REQUIRED, never null, MUST be currency)>,\n'
             '      "item_rate": <number|null>,\n'
             '      "item_quantity": <number|null>\n'
             "    }\n"
             "  ]\n"
             "}\n\n"
-            "IMPORTANT: Every item MUST have a valid item_amount as a number. If you cannot determine the amount, do not include that item.\n\n"
+            "IMPORTANT: Every item MUST have a valid item_amount as a number representing currency. If you cannot determine the monetary amount, do not include that item.\n\n"
             f"PAGE NUMBER: {page_no}\n\n"
             f"OCR TEXT:\n{text}\n\n"
             "Extract all line items now:"

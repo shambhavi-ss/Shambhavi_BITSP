@@ -37,6 +37,16 @@ async def health_check():
 
 @app.post("/extract-bill-data", response_model=ExtractionResponse)
 async def extract_bill_data(payload: DocumentRequest) -> ExtractionResponse:
+    """
+    Extract line items from a medical bill or invoice.
+    
+    This endpoint processes the document through our pipeline:
+    1. Download the document from the provided URL
+    2. Convert to images (if PDF)
+    3. Extract text using OCR
+    4. Structure the data using LLM
+    5. Return organized line items with token usage metrics
+    """
     try:
         result = await pipeline.run(payload.document)
         return ExtractionResponse(
@@ -44,6 +54,7 @@ async def extract_bill_data(payload: DocumentRequest) -> ExtractionResponse:
             data=result.data,
             token_usage=result.token_usage,
         )
-    except Exception as exc:  # broad catch to package error details for caller
+    except Exception as exc:
+        # Return a helpful error message to help debug issues
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
