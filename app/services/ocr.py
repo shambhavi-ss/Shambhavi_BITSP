@@ -50,33 +50,20 @@ class OCRService:
     
     def _preprocess_image(self, image: Image.Image) -> Image.Image:
         """
-        Preprocess image to improve OCR accuracy.
-        
-        Techniques:
-        - Convert to RGB (if needed)
-        - Enhance contrast for better text visibility
-        - Sharpen to improve edge definition
-        - Upscale if image is too small
+        Lightweight preprocessing for speed (optimized for competition).
+        Only essential conversions to balance quality and performance.
         """
         # Convert to RGB if not already
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Upscale if image is small (improves OCR on low-res images)
-        min_dimension = 1500
+        # Only upscale if really small (< 800px) for speed
         width, height = image.size
-        if width < min_dimension or height < min_dimension:
-            scale_factor = max(min_dimension / width, min_dimension / height)
+        if width < 800 or height < 800:
+            scale_factor = max(800 / width, 800 / height)
             new_width = int(width * scale_factor)
             new_height = int(height * scale_factor)
-            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
-        # Enhance contrast for better text visibility
-        enhancer = ImageEnhance.Contrast(image)
-        image = enhancer.enhance(1.5)  # Increase contrast by 50%
-        
-        # Sharpen for better edge definition
-        image = image.filter(ImageFilter.SHARPEN)
+            image = image.resize((new_width, new_height), Image.Resampling.BILINEAR)
         
         return image
 
